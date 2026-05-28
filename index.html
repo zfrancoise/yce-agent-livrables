@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>YCE — Recherche de livrables</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #0f0f0f;
+    --paper: #f7f4ef;
+    --accent: #c8412a;
+    --accent2: #1a3a5c;
+    --muted: #8a8580;
+    --border: #ddd9d2;
+    --card: #ffffff;
+    --tag-bg: #eef2f7;
+    --tag-active: #1a3a5c;
+    --tag-text-active: #ffffff;
+    --shadow: 0 2px 12px rgba(0,0,0,0.07);
+    --radius: 10px;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+  }
+
+  /* HEADER */
+  header {
+    background: var(--accent2);
+    padding: 28px 40px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .logo-mark {
+    width: 40px; height: 40px;
+    background: var(--accent);
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-family: 'DM Serif Display', serif;
+    font-size: 20px; color: white; font-weight: 400;
+    flex-shrink: 0;
+  }
+  .header-text h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 22px; color: white; font-weight: 400;
+    line-height: 1.1;
+  }
+  .header-text p {
+    font-size: 13px; color: rgba(255,255,255,0.6); margin-top: 2px;
+  }
+
+  /* MAIN LAYOUT */
+  main {
+    max-width: 960px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* SEARCH BAR */
+  .search-section { margin-bottom: 36px; }
+
+  .search-label {
+    font-size: 13px; font-weight: 600; letter-spacing: .06em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+
+  .search-bar {
+    display: flex; gap: 10px; align-items: stretch;
+  }
+  .search-input {
+    flex: 1;
+    padding: 14px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--card);
+    color: var(--ink);
+    outline: none;
+    transition: border-color .2s;
+  }
+  .search-input:focus { border-color: var(--accent2); }
+  .search-input::placeholder { color: #b0aba4; }
+
+  .search-btn {
+    padding: 14px 22px;
+    background: var(--accent2);
+    color: white;
+    border: none;
+    border-radius: var(--radius);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer;
+    transition: background .2s, transform .1s;
+    white-space: nowrap;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .search-btn:hover { background: #14304f; }
+  .search-btn:active { transform: scale(.97); }
+  .search-btn:disabled { opacity: .5; cursor: not-allowed; }
+
+  /* FILTERS */
+  .filters-section { margin-bottom: 36px; }
+  .filters-row { display: flex; gap: 24px; flex-wrap: wrap; }
+  .filter-group { flex: 1; min-width: 220px; }
+  .filter-group h3 {
+    font-size: 11px; font-weight: 700; letter-spacing: .08em;
+    text-transform: uppercase; color: var(--muted); margin-bottom: 10px;
+  }
+  .tags {
+    display: flex; flex-wrap: wrap; gap: 7px;
+  }
+  .tag {
+    padding: 6px 13px;
+    border-radius: 20px;
+    font-size: 12.5px; font-weight: 500;
+    background: var(--tag-bg);
+    color: var(--ink);
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all .15s;
+    user-select: none;
+  }
+  .tag:hover { border-color: var(--accent2); color: var(--accent2); }
+  .tag.active {
+    background: var(--tag-active);
+    color: var(--tag-text-active);
+    border-color: var(--tag-active);
+  }
+  .tag.active.secteur { background: var(--accent); border-color: var(--accent); }
+
+  /* DIVIDER */
+  .divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 24px 0;
+    color: var(--muted); font-size: 12px; font-weight: 500;
+  }
+  .divider::before, .divider::after {
+    content: ''; flex: 1; height: 1px; background: var(--border);
+  }
+
+  /* RESULTS */
+  .results-header {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 16px;
+  }
+  .results-count {
+    font-size: 13px; color: var(--muted);
+  }
+  .results-count strong { color: var(--ink); }
+
+  .reset-btn {
+    font-size: 12px; color: var(--muted);
+    background: none; border: none; cursor: pointer;
+    text-decoration: underline;
+    font-family: 'DM Sans', sans-serif;
+  }
+  .reset-btn:hover { color: var(--accent); }
+
+  /* DOCUMENT CARDS */
+  .docs-grid {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+
+  .doc-card {
+    background: var(--card);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    display: flex; align-items: flex-start; gap: 16px;
+    transition: border-color .15s, box-shadow .15s;
+    text-decoration: none; color: inherit;
+  }
+  .doc-card:hover {
+    border-color: var(--accent2);
+    box-shadow: var(--shadow);
+  }
+
+  .doc-icon {
+    width: 40px; height: 40px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; margin-top: 1px;
+  }
+  .doc-icon.pptx { background: #fff0ec; }
+  .doc-icon.pdf  { background: #fff0ec; }
+  .doc-icon.xlsx { background: #edfbf0; }
+  .doc-icon.docx { background: #eef3ff; }
+  .doc-icon.other{ background: #f5f5f5; }
+
+  .doc-body { flex: 1; min-width: 0; }
+  .doc-name {
+    font-size: 14px; font-weight: 600;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    margin-bottom: 6px;
+  }
+  .doc-meta {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+  }
+  .meta-tag {
+    padding: 3px 9px; border-radius: 12px;
+    font-size: 11.5px; font-weight: 500;
+  }
+  .meta-secteur { background: #fff0ec; color: var(--accent); }
+  .meta-typo    { background: #eef3ff; color: var(--accent2); }
+
+  .doc-link {
+    flex-shrink: 0;
+    padding: 7px 14px;
+    background: var(--tag-bg);
+    border-radius: 7px;
+    font-size: 12px; font-weight: 600;
+    color: var(--accent2);
+    text-decoration: none;
+    transition: background .15s;
+    white-space: nowrap;
+    align-self: center;
+  }
+  .doc-link:hover { background: var(--accent2); color: white; }
+
+  /* STATES */
+  .state-box {
+    text-align: center;
+    padding: 60px 24px;
+    color: var(--muted);
+  }
+  .state-box .state-icon { font-size: 40px; margin-bottom: 12px; }
+  .state-box p { font-size: 15px; line-height: 1.6; }
+  .state-box p strong { color: var(--ink); }
+
+  .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent2);
+    border-radius: 50%;
+    animation: spin .7s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ANIMATIONS */
+  .doc-card {
+    animation: fadeUp .25s ease both;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 600px) {
+    header { padding: 20px; }
+    main { padding: 24px 16px 60px; }
+    .filters-row { flex-direction: column; }
+    .doc-card { flex-wrap: wrap; }
+    .doc-link { width: 100%; text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">Y</div>
+  <div class="header-text">
+    <h1>Recherche de livrables</h1>
+    <p>Base documentaire YCE — testtypages</p>
+  </div>
+</header>
+
+<main>
+
+  <!-- RECHERCHE NATURELLE -->
+  <div class="search-section">
+    <div class="search-label">Recherche libre</div>
+    <div class="search-bar">
+      <input
+        class="search-input"
+        id="nlQuery"
+        type="text"
+        placeholder="Ex : feuille de route santé, benchmark prévoyance…"
+        autocomplete="off"
+      />
+      <button class="search-btn" id="searchBtn" onclick="runNLSearch()">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+        Rechercher
+      </button>
+    </div>
+  </div>
+
+  <div class="divider">ou filtrer par</div>
+
+  <!-- FILTRES -->
+  <div class="filters-section">
+    <div class="filters-row">
+      <div class="filter-group">
+        <h3>Secteur client</h3>
+        <div class="tags" id="secteurTags">
+          <div class="tag secteur" data-val="Santé" onclick="toggleTag(this,'secteur')">Santé</div>
+          <div class="tag secteur" data-val="Prévoyance" onclick="toggleTag(this,'secteur')">Prévoyance</div>
+          <div class="tag secteur" data-val="Retraite supplémentaire" onclick="toggleTag(this,'secteur')">Retraite suppl.</div>
+          <div class="tag secteur" data-val="Retraite obligatoire" onclick="toggleTag(this,'secteur')">Retraite oblig.</div>
+          <div class="tag secteur" data-val="Emploi" onclick="toggleTag(this,'secteur')">Emploi</div>
+          <div class="tag secteur" data-val="Formation professionnelle" onclick="toggleTag(this,'secteur')">Formation prof.</div>
+          <div class="tag secteur" data-val="Action sociale" onclick="toggleTag(this,'secteur')">Action sociale</div>
+          <div class="tag secteur" data-val="Données sociales" onclick="toggleTag(this,'secteur')">Données sociales</div>
+        </div>
+      </div>
+      <div class="filter-group">
+        <h3>Typologie de livrable</h3>
+        <div class="tags" id="typoTags">
+          <div class="tag" data-val="Benchmark/segmentation marché" onclick="toggleTag(this,'typo')">Benchmark / segmentation</div>
+          <div class="tag" data-val="Chaîne de valeur/activité" onclick="toggleTag(this,'typo')">Chaîne de valeur</div>
+          <div class="tag" data-val="Cartographie de flux" onclick="toggleTag(this,'typo')">Cartographie de flux</div>
+          <div class="tag" data-val="Feuille de route/planning" onclick="toggleTag(this,'typo')">Feuille de route</div>
+          <div class="tag" data-val="Organisation projets" onclick="toggleTag(this,'typo')">Organisation projets</div>
+          <div class="tag" data-val="Suivi de projets" onclick="toggleTag(this,'typo')">Suivi de projets</div>
+          <div class="tag" data-val="Indicateurs" onclick="toggleTag(this,'typo')">Indicateurs</div>
+          <div class="tag" data-val="Parcours clients" onclick="toggleTag(this,'typo')">Parcours clients</div>
+          <div class="tag" data-val="Proposition de démarche" onclick="toggleTag(this,'typo')">Proposition de démarche</div>
+          <div class="tag" data-val="Business plan" onclick="toggleTag(this,'typo')">Business plan</div>
+          <div class="tag" data-val="Organigramme" onclick="toggleTag(this,'typo')">Organigramme</div>
+          <div class="tag" data-val="Étude/infographie" onclick="toggleTag(this,'typo')">Étude / infographie</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RÉSULTATS -->
+  <div id="resultsArea">
+    <div class="state-box">
+      <div class="state-icon">📁</div>
+      <p>Saisissez une recherche ou sélectionnez<br>un secteur et/ou une typologie pour trouver vos livrables.</p>
+    </div>
+  </div>
+
+</main>
+
+<script>
+// ─── CONFIG ──────────────────────────────────────────────────────────────────
+const SITE_URL   = "https://ycepartnersfr.sharepoint.com/sites/testtypages";
+const LIST_NAME  = "Documents partages";
+// Noms internes des colonnes
+const F_SECTEUR  = "Secteurclient";
+const F_TYPO     = "Typologie_x0020_de_x0020_livrable";
+
+// ─── ÉTAT ────────────────────────────────────────────────────────────────────
+let selectedSecteurs = [];
+let selectedTypos    = [];
+
+// ─── TAGS ────────────────────────────────────────────────────────────────────
+function toggleTag(el, group) {
+  el.classList.toggle('active');
+  const val = el.dataset.val;
+  if (group === 'secteur') {
+    selectedSecteurs = toggle(selectedSecteurs, val);
+  } else {
+    selectedTypos = toggle(selectedTypos, val);
+  }
+  runFilterSearch();
+}
+
+function toggle(arr, val) {
+  return arr.includes(val) ? arr.filter(v => v !== val) : [...arr, val];
+}
+
+// ─── RECHERCHE NATURELLE ─────────────────────────────────────────────────────
+function runNLSearch() {
+  const q = document.getElementById('nlQuery').value.trim();
+  if (!q) return;
+
+  // Reset filtres visuels
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+  selectedSecteurs = [];
+  selectedTypos    = [];
+
+  // Mapping mots-clés → valeurs
+  const secteurMap = {
+    'santé': 'Santé', 'sante': 'Santé',
+    'prévoyance': 'Prévoyance', 'prevoyance': 'Prévoyance',
+    'retraite supplémentaire': 'Retraite supplémentaire',
+    'retraite obligatoire': 'Retraite obligatoire',
+    'emploi': 'Emploi',
+    'formation': 'Formation professionnelle',
+    'action sociale': 'Action sociale',
+    'données sociales': 'Données sociales', 'donnees sociales': 'Données sociales',
+  };
+  const typoMap = {
+    'benchmark': 'Benchmark/segmentation marché', 'segmentation': 'Benchmark/segmentation marché',
+    'chaîne de valeur': 'Chaîne de valeur/activité', 'chaine de valeur': 'Chaîne de valeur/activité', 'activité': 'Chaîne de valeur/activité',
+    'cartographie': 'Cartographie de flux', 'flux': 'Cartographie de flux',
+    'feuille de route': 'Feuille de route/planning', 'planning': 'Feuille de route/planning', 'roadmap': 'Feuille de route/planning', 'rétroplanning': 'Feuille de route/planning',
+    'organisation': 'Organisation projets', 'gouvernance': 'Organisation projets',
+    'suivi': 'Suivi de projets', 'pilotage': 'Suivi de projets',
+    'indicateurs': 'Indicateurs', 'kpi': 'Indicateurs',
+    'parcours client': 'Parcours clients', 'parcours': 'Parcours clients',
+    'démarche': 'Proposition de démarche', 'proposition': 'Proposition de démarche',
+    'business plan': 'Business plan', 'bp': 'Business plan',
+    'organigramme': 'Organigramme',
+    'étude': 'Étude/infographie', 'etude': 'Étude/infographie', 'infographie': 'Étude/infographie', 'synthèse': 'Étude/infographie',
+  };
+
+  const ql = q.toLowerCase();
+  for (const [kw, val] of Object.entries(secteurMap)) {
+    if (ql.includes(kw) && !selectedSecteurs.includes(val)) selectedSecteurs.push(val);
+  }
+  for (const [kw, val] of Object.entries(typoMap)) {
+    if (ql.includes(kw) && !selectedTypos.includes(val)) selectedTypos.push(val);
+  }
+
+  // Allumer les tags correspondants visuellement
+  document.querySelectorAll('.tag.secteur').forEach(t => {
+    if (selectedSecteurs.includes(t.dataset.val)) t.classList.add('active');
+  });
+  document.querySelectorAll('#typoTags .tag').forEach(t => {
+    if (selectedTypos.includes(t.dataset.val)) t.classList.add('active');
+  });
+
+  runFilterSearch();
+}
+
+// ─── RECHERCHE SHAREPOINT ────────────────────────────────────────────────────
+async function runFilterSearch() {
+  if (selectedSecteurs.length === 0 && selectedTypos.length === 0) {
+    showEmpty(); return;
+  }
+  showLoading();
+
+  try {
+    // Construire le filtre CAML/OData
+    const filters = [];
+    if (selectedSecteurs.length > 0) {
+      const sf = selectedSecteurs.map(s => `Secteurclient eq '${encodeVal(s)}'`).join(' or ');
+      filters.push('(' + sf + ')');
+    }
+    if (selectedTypos.length > 0) {
+      const tf = selectedTypos.map(t => `Typologie_x0020_de_x0020_livrable eq '${encodeVal(t)}'`).join(' or ');
+      filters.push('(' + tf + ')');
+    }
+
+    const filterStr = filters.join(' and ');
+    const url = `${SITE_URL}/_api/web/lists/getbytitle('${encodeURIComponent(LIST_NAME)}')/items`
+      + `?$select=Id,FileLeafRef,FileRef,Secteurclient,Typologie_x0020_de_x0020_livrable,Modified`
+      + `&$filter=FSObjType eq 0 and ${filterStr}`
+      + `&$top=100&$orderby=Modified desc`;
+
+    const resp = await fetch(url, {
+      headers: { 'Accept': 'application/json;odata=verbose' },
+      credentials: 'include'
+    });
+
+    if (!resp.ok) throw new Error('HTTP ' + resp.status);
+    const data = await resp.json();
+    const items = data.d?.results || [];
+    renderResults(items);
+  } catch(e) {
+    showError(e.message);
+  }
+}
+
+function encodeVal(v) {
+  return v.replace(/'/g, "''");
+}
+
+// ─── RENDU ───────────────────────────────────────────────────────────────────
+function renderResults(items) {
+  const area = document.getElementById('resultsArea');
+  if (items.length === 0) {
+    area.innerHTML = `
+      <div class="state-box">
+        <div class="state-icon">🔍</div>
+        <p>Aucun document trouvé pour cette combinaison.<br>
+        <strong>Essayez d'élargir les filtres.</strong></p>
+      </div>`;
+    return;
+  }
+
+  const activeFilters = [...selectedSecteurs, ...selectedTypos].join(' · ');
+
+  area.innerHTML = `
+    <div class="results-header">
+      <div class="results-count"><strong>${items.length}</strong> document${items.length > 1 ? 's' : ''} trouvé${items.length > 1 ? 's' : ''} — ${activeFilters}</div>
+      <button class="reset-btn" onclick="reset()">Réinitialiser</button>
+    </div>
+    <div class="docs-grid">
+      ${items.map((item, i) => renderCard(item, i)).join('')}
+    </div>`;
+}
+
+function renderCard(item, i) {
+  const name = item.FileLeafRef || '';
+  const ext  = name.split('.').pop().toLowerCase();
+  const url  = SITE_URL + '/' + (item.FileRef || '').replace(/^\/sites\/testtypages\//, '');
+  const openUrl = `${SITE_URL}/_layouts/15/Doc.aspx?sourcedoc=${encodeURIComponent(item.FileRef)}&action=default`;
+
+  const icon = { pptx: '📊', pdf: '📄', xlsx: '📗', docx: '📝' }[ext] || '📎';
+  const iconClass = ['pptx','pdf','xlsx','docx'].includes(ext) ? ext : 'other';
+
+  const secteurs = toArray(item.Secteurclient);
+  const typos    = toArray(item.Typologie_x0020_de_x0020_livrable);
+
+  const secteurTags = secteurs.map(s =>
+    `<span class="meta-tag meta-secteur">${s}</span>`).join('');
+  const typoTags = typos.map(t =>
+    `<span class="meta-tag meta-typo">${t}</span>`).join('');
+
+  return `
+    <div class="doc-card" style="animation-delay:${i * 40}ms">
+      <div class="doc-icon ${iconClass}">${icon}</div>
+      <div class="doc-body">
+        <div class="doc-name" title="${name}">${name}</div>
+        <div class="doc-meta">${secteurTags}${typoTags}</div>
+      </div>
+      <a class="doc-link" href="${openUrl}" target="_blank">Ouvrir →</a>
+    </div>`;
+}
+
+function toArray(val) {
+  if (!val) return [];
+  if (val.results) return val.results;
+  if (Array.isArray(val)) return val;
+  return [val];
+}
+
+// ─── ÉTATS ───────────────────────────────────────────────────────────────────
+function showLoading() {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="state-box">
+      <div class="spinner"></div>
+      <p>Recherche en cours…</p>
+    </div>`;
+}
+function showEmpty() {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="state-box">
+      <div class="state-icon">📁</div>
+      <p>Saisissez une recherche ou sélectionnez<br>un secteur et/ou une typologie pour trouver vos livrables.</p>
+    </div>`;
+}
+function showError(msg) {
+  document.getElementById('resultsArea').innerHTML = `
+    <div class="state-box">
+      <div class="state-icon">⚠️</div>
+      <p><strong>Erreur de connexion SharePoint.</strong><br>
+      Assurez-vous d'être connecté à votre compte Microsoft.<br>
+      <small style="color:#b0aba4">${msg}</small></p>
+    </div>`;
+}
+
+function reset() {
+  document.querySelectorAll('.tag').forEach(t => t.classList.remove('active'));
+  document.getElementById('nlQuery').value = '';
+  selectedSecteurs = [];
+  selectedTypos    = [];
+  showEmpty();
+}
+
+// Recherche au Enter
+document.getElementById('nlQuery').addEventListener('keydown', e => {
+  if (e.key === 'Enter') runNLSearch();
+});
+</script>
+</body>
+</html>
